@@ -108,6 +108,10 @@ public class VehicleController {
                         existing.setNextInspection(vehicle.getNextInspection());
                     if (vehicle.getNextWorkshopAppointment() != null)
                         existing.setNextWorkshopAppointment(vehicle.getNextWorkshopAppointment());
+                    if (vehicle.getLastInspection() != null)
+                        existing.setLastInspection(vehicle.getLastInspection());
+                    if (vehicle.getLastTuev() != null)
+                        existing.setLastTuev(vehicle.getLastTuev());
 
                     return ResponseEntity.ok(vehicleRepository.save(existing));
                 })

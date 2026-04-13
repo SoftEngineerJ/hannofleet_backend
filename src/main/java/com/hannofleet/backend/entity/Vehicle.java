@@ -6,7 +6,7 @@ import lombok.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "vehicles", schema = "hannofleet")
+@Table(name = "vehicles")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -37,16 +37,20 @@ public class Vehicle {
     private String driver;
 
     @JsonDeserialize(using = CustomLocalDateDeserializer.class)
+    @Column(name = "last_inspection")
+    private LocalDate lastInspection;
+
+    @JsonDeserialize(using = CustomLocalDateDeserializer.class)
     @Column(name = "next_inspection")
     private LocalDate nextInspection;
 
     @JsonDeserialize(using = CustomLocalDateDeserializer.class)
-    @Column(name = "next_workshop_appointment")
-    private LocalDate nextWorkshopAppointment;
+    @Column(name = "last_tuev")
+    private LocalDate lastTuev;
 
     @JsonDeserialize(using = CustomLocalDateDeserializer.class)
-    @Column(name = "next_insurance")
-    private LocalDate nextInsurance;
+    @Column(name = "next_workshop_appointment")
+    private LocalDate nextWorkshopAppointment;
 
     public enum VehicleStatus {
         FREI,
