@@ -6,11 +6,13 @@ import com.hannofleet.backend.entity.VehicleHistory;
 import com.hannofleet.backend.repository.VehicleRepository;
 import com.hannofleet.backend.repository.VehicleHistoryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/vehicles")
@@ -53,12 +55,22 @@ public class VehicleController {
     }
 
     @PostMapping
-    public ResponseEntity<Vehicle> createVehicle(@RequestBody Vehicle vehicle) {
-        if (vehicleRepository.existsByLicensePlate(vehicle.getLicensePlate())) {
-            return ResponseEntity.badRequest().build();
+    public ResponseEntity<?> createVehicle(@RequestBody Vehicle vehicle) {
+        if (vehicle.getLicensePlate() == null || vehicle.getLicensePlate().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Kennzeichen ist erforderlich"));
         }
-        Vehicle saved = vehicleRepository.save(vehicle);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        if (vehicle.getStatus() == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Status ist erforderlich"));
+        }
+
+        vehicle.setLicensePlate(vehicle.getLicensePlate().trim().replaceAll("\\s+", " "));
+
+        try {
+            Vehicle saved = vehicleRepository.save(vehicle);
+            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        } catch (DataIntegrityViolationException ex) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Fahrzeug existiert bereits"));
+        }
     }
 
     @PutMapping("/{id}")
@@ -119,14 +131,20 @@ public class VehicleController {
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<Vehicle> updateStatus(@PathVariable Long id, @RequestParam VehicleStatus status) {
+    public ResponseEntity<Vehicle> updateStatus(@PathVariable Long id, @RequestParam VehicleStatus status,
+            @RequestParam(required = false) String tourNumber) {
         return vehicleRepository.findById(id)
                 .map(vehicle -> {
                     String oldStatus = vehicle.getStatus().name();
 
-                    // Nur ändern wenn sich der Status tatsächlich unterscheidet
+                    // Tour-Nummer immer aktualisieren wenn vorhanden
+                    if (tourNumber != null && !tourNumber.isEmpty()) {
+                        vehicle.setTourNumber(tourNumber);
+                    }
+
+                    // Nur Status ändern wenn er sich unterscheidet
                     if (oldStatus.equals(status.name())) {
-                        return ResponseEntity.ok(vehicle);
+                        return ResponseEntity.ok(vehicleRepository.save(vehicle));
                     }
 
                     vehicle.setStatus(status);
@@ -168,8 +186,17 @@ public class VehicleController {
     }
 
     @PostMapping("/batch")
-    public ResponseEntity<List<Vehicle>> createVehiclesBatch(@RequestBody List<Vehicle> vehicles) {
-        List<Vehicle> saved = vehicleRepository.saveAll(vehicles);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    public ResponseEntity<?> createVehiclesBatch(@RequestBody List<Vehicle> vehicles) {
+        for (Vehicle v : vehicles) {
+            if (v.getLicensePlate() != null) {
+                v.setLicensePlate(v.getLicensePlate().trim().replaceAll("\\s+", " "));
+            }
+        }
+        try {
+            List<Vehicle> saved = vehicleRepository.saveAll(vehicles);
+            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        } catch (DataIntegrityViolationException ex) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Ein oder mehrere Fahrzeuge existieren bereits"));
+        }
     }
 }

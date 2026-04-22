@@ -1,6 +1,9 @@
 package com.hannofleet.backend.entity;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
@@ -36,19 +39,23 @@ public class Vehicle {
     @Column(length = 100)
     private String driver;
 
-    @JsonDeserialize(using = CustomLocalDateDeserializer.class)
+    @JsonSerialize(using = LocalDateSerializer.class)
+    @JsonDeserialize(using = LocalDateDeserializer.class)
     @Column(name = "last_inspection")
     private LocalDate lastInspection;
 
-    @JsonDeserialize(using = CustomLocalDateDeserializer.class)
+    @JsonSerialize(using = LocalDateSerializer.class)
+    @JsonDeserialize(using = LocalDateDeserializer.class)
     @Column(name = "next_inspection")
     private LocalDate nextInspection;
 
-    @JsonDeserialize(using = CustomLocalDateDeserializer.class)
+    @JsonSerialize(using = LocalDateSerializer.class)
+    @JsonDeserialize(using = LocalDateDeserializer.class)
     @Column(name = "last_tuev")
     private LocalDate lastTuev;
 
-    @JsonDeserialize(using = CustomLocalDateDeserializer.class)
+    @JsonSerialize(using = LocalDateSerializer.class)
+    @JsonDeserialize(using = LocalDateDeserializer.class)
     @Column(name = "next_workshop_appointment")
     private LocalDate nextWorkshopAppointment;
 
